@@ -10,7 +10,7 @@ image::https://upload.wikimedia.org/wikipedia/commons/7/79/Hans_Burgkmair_d._%C3
 
 In Form von CSV Dateien liegen Regesten zu Friedrich III vor und wurden auf Google Drive hochgeladen. Die CSV Dateien sind jeweils zwischen 5 und 12 MB groß und haben zwischen 8000 und 12000 Zeilen.
 
-== vorbereitende Schritt
+== vorbereitende Schritte
 
 === Konfiguration Neo4j
 
@@ -43,6 +43,7 @@ IMPORTANT: jede Zeile separat ausführen oder `cypher-shell` benutzen.
 [source,cypher]
 ----
 CREATE INDEX ON :Regest(ident);
+CREATE INDEX ON :Regest(regid);
 CREATE INDEX ON :Datum(startdate);
 CREATE INDEX ON :Ort(ort);
 CREATE INDEX ON :Lemma(lemma);
@@ -66,7 +67,7 @@ LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/1qw4VGhi5RTg7
 CREATE (r:Regest {regid:line.persistent_identifier, Text:line.summary, Überlieferung:line.archival_history,ident:line.identifier})
 MERGE (d:Datum {startdate:line.start_date, enddate:line.end_date})
 MERGE (o:Ort {ort:line.name, latitude:toFloat(line.latitude), longitude:toFloat(line.longitude)})
-CREATE (r)-[:HAT_DATUM]->_(d)
+CREATE (r)-[:HAT_DATUM]->(d)
 CREATE (r)-[:HAT_ORT]->(o);
 ----
 
@@ -150,7 +151,7 @@ Mit dem "Zeitpfeil" kann man nun den Itinerar abfragen:
 MATCH dates=(s:Datum)-[:NAECHSTES_DATUM*]->(e:Datum)
 WHERE not ( (s)<-[:NAECHSTES_DATUM]-() ) and not ( (e)-[:NAECHSTES_DATUM]->() )
 UNWIND nodes(dates) AS d
-MATCH (d)<-[:DATUM]-()-[:ORT]->(o:Ort)
+MATCH (d)<-[:HAT_DATUM]-()-[:HAT_ORT]->(o:Ort)
 WITH collect( [d,o]) AS route
 UNWIND range(0, size(route)-2) AS x
 WITH route[x][0].enddate as left, route[x][1].ort AS from, route[x+1][0].startdate AS arrived, route[x+1][1].ort AS to, distance(point(route[x][1]), point(route[x+1][1]))/1000.0 AS distance
@@ -184,7 +185,7 @@ def xml = new StreamingMarkupBuilder(encoding: "utf-8").bind {
     StatementResult rs = session.run( """match dates=(s:Datum)-[:NAECHSTES_DATUM*]->(e:Datum)
   where not ( (s)<-[:NAECHSTES_DATUM]-() )  and not ( (e)-[:NAECHSTES_DATUM]->() )
   unwind nodes(dates) as d
-  match (d)<-[:DATUM]-()-[:ORT]->(o:Ort)
+  match (d)<-[:HAT_DATUM]-()-[:HAT_ORT]->(o:Ort)
   return d.startdate as startdate, d.enddate as enddate, o.ort as ort, o.latitude as lat, o.longitude as lon""")
 
     Document {
@@ -250,9 +251,11 @@ Damit kann nun importiert werden:
 
 [source,cypher]
 ----
-LOAD CSV WITH HEADERS FROM "file:///home/stefan/neo/customers/kuczera/tagung/akdwmainz_fiii_guide/csv/regesten.csv" AS line
+LOAD CSV WITH HEADERS FROM "https://docs.google.com/spreadsheets/d/1qw4VGhi5RTg7b8KhGXpXR8tdhYsjEIdYkKucl-YlNJc/export?format=csv&id=1qw4VGhi5RTg7b8KhGXpXR8tdhYsjEIdYkKucl-YlNJc&gid=1917262438" AS line
+WITH line
+WHERE line.archival_history CONTAINS "link"
+MATCH (reg:Regest {regid:line.persistent_identifier})
 UNWIND apoc.text.regexGroups(line.archival_history, "<link (\\S+)>(\\S+)</link>") as link
-MATCH (r:Regest {regid:line.persistent_identifier})
 MERGE (ref:Referenz {url:link[1]}) ON CREATE SET ref.title=link[2]
 MERGE (reg)-[:REFERENZIERT]->(ref)
 ----
