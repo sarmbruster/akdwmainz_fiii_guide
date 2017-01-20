@@ -6,7 +6,7 @@
 
 === Einführung
 
-image::https://upload.wikimedia.org/wikipedia/commons/7/79/Hans_Burgkmair_d._%C3%84._%28zugeschr.%29_-_Bildnis_Kaiser_Friedrich_III.jpg[]
+image::https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Hans_Burgkmair_d._%C3%84._%28zugeschr.%29_-_Bildnis_Kaiser_Friedrich_III.jpg/490px-Hans_Burgkmair_d._%C3%84._%28zugeschr.%29_-_Bildnis_Kaiser_Friedrich_III.jpg[]
 
 In Form von CSV Dateien liegen Regesten zu Friedrich III vor und wurden auf Google Drive hochgeladen. Die CSV Dateien sind jeweils zwischen 5 und 12 MB groß und haben zwischen 8000 und 12000 Zeilen.
 
