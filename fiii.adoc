@@ -49,6 +49,10 @@ CREATE INDEX ON :Ort(ort);
 CREATE INDEX ON :Lemma(lemma);
 ----
 
+== Graphdatenmodell
+
+image::https://raw.githubusercontent.com/sarmbruster/akdwmainz_fiii_guide/master/img/graphmodel.png[Graphdatenmodell]
+
 == Import Regesten
 
 Nachdem die Datenbank nun vorbereitet ist werden wir nun die CSV Daten importieren.
